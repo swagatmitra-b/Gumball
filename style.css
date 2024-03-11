@@ -1,0 +1,12 @@
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+body {
+  overflow: hidden;
+}
+#canvas {
+  border: 1px solid black;
+  background-color: rgba(3, 3, 7, 0.95);
+}
