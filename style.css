@@ -13,10 +13,23 @@ body {
   background-color: rgba(3, 3, 7, 0.95);
 }
 
-div.score {
+.score,
+.tower,
+.boost {
   position: absolute;
   font-size: 2rem;
   color: white;
   top: 2%;
+}
+
+.score {
   right: 2%;
+}
+
+.tower {
+  left: 2%;
+}
+
+.boost {
+  right: 10%;
 }

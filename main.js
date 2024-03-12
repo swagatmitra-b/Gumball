@@ -1,5 +1,8 @@
 const canvas = document.getElementById("canvas");
 const scoreBoard = document.querySelector(".score");
+const towerBoard = document.querySelector(".tower");
+const boostBoard = document.querySelector(".boost");
+
 const ctx = canvas.getContext("2d");
 
 let canvasWidth = innerWidth;
@@ -16,6 +19,9 @@ const camera = {
 let keypressed = [];
 let count = 0;
 let score = 0;
+let boost = 0;
+let tower = new Set();
+let active = true;
 
 const protaColors = ["#d90947", "#cc5679", "#cf7c95", "#d6a5b4"];
 
@@ -25,22 +31,22 @@ class GumBall {
     this.velocity = { x: 0, y: 0 };
     this.color = color;
     this.radius = radius;
+    this.speed = 1.8;
   }
 
   move(direction) {
-    const speed = 1.8;
     switch (direction) {
       case "w":
-        this.velocity.y = -speed;
+        this.velocity.y = -this.speed;
         break;
       case "s":
-        this.velocity.y = speed;
+        this.velocity.y = this.speed;
         break;
       case "a":
-        this.velocity.x = -speed;
+        this.velocity.x = -this.speed;
         break;
       case "d":
-        this.velocity.x = speed;
+        this.velocity.x = this.speed;
         break;
     }
   }
@@ -95,8 +101,8 @@ class GumBall {
     const angle = Math.atan2(y - this.position.y, x - this.position.x);
     const velocityX = Math.cos(angle);
     const velocityY = Math.sin(angle);
-    this.position.x += velocityX * (1 / this.radius) * 12;
-    this.position.y += velocityY * (1 / this.radius) * 12;
+    this.position.x += velocityX * (1 / this.radius) * 9;
+    this.position.y += velocityY * (1 / this.radius) * 9;
   }
 }
 
@@ -116,11 +122,10 @@ class safeHouse {
       this.dimension
     );
   }
-  checkVacancy() {}
 }
 
 const prota = new GumBall(
-  canvasWidth / 2 + 200,
+  canvasWidth / 2,
   canvasHeight / 2,
   10,
   protaColors[0]
@@ -128,14 +133,16 @@ const prota = new GumBall(
 
 let evilGumball = [];
 const safeHouses = [
-  new safeHouse(100 - camera.x, 100 - camera.y, 20, "green"),
-  new safeHouse(100 - camera.x, 600 - camera.y, 20, "green"),
-  new safeHouse(1400 - camera.x, 600 - camera.y, 20, "green"),
-  new safeHouse(1400 - camera.x, 100 - camera.y, 20, "green"),
+  new safeHouse(100 - camera.x, 100 - camera.y, 35, "green"),
+  new safeHouse(100 - camera.x, 600 - camera.y, 35, "green"),
+  new safeHouse(1400 - camera.x, 600 - camera.y, 35, "green"),
+  new safeHouse(1400 - camera.x, 100 - camera.y, 35, "green"),
 ];
 
 function animate() {
   ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+  showTowers();
+  showBoost();
   for (let house of safeHouses) {
     house.render();
   }
@@ -162,12 +169,49 @@ function animate() {
       score += 1;
     }
     scoreBoard.innerText = score;
-    console.log(score);
+    boost = Math.floor(score / 50);
     if (count > 3) cancelAnimationFrame();
   });
+  checkHouse();
+  if (tower.size == 4) {
+    const halfLength = Math.ceil(evilGumball.length / 2);
+    evilGumball = evilGumball.slice(halfLength, evilGumball.length - 1);
+    tower.clear();
+    count--;
+    if (count < 0) count = 0;
+    prota.color = protaColors[count];
+
+    active = !active;
+  }
   requestAnimationFrame(animate);
 }
 animate();
+
+function checkHouse() {
+  safeHouses.forEach((house) => {
+    const distance = Math.hypot(
+      prota.position.x - house.x + camera.x,
+      prota.position.y - house.y + camera.y
+    );
+    const on = 20 <= distance && distance <= 25;
+    if (on) {
+      if (active) {
+        if (!tower.has(house)) house.color = "blue";
+      } else {
+        if (!tower.has(house)) house.color = "green";
+      }
+      tower.add(house);
+    }
+  });
+}
+
+function showTowers() {
+  towerBoard.innerText = `${tower.size}/4`;
+}
+
+function showBoost() {
+  boostBoard.innerText = boost;
+}
 
 document.addEventListener("keydown", (e) => {
   switch (e.key) {
@@ -178,6 +222,11 @@ document.addEventListener("keydown", (e) => {
       if (!keypressed.includes(e.key)) keypressed.unshift(e.key);
       prota.move(e.key);
       break;
+    case " ":
+      if (boost > 0) {
+        prota.speed = 3;
+        prota.move(keypressed[0]);
+      }
   }
 });
 
@@ -190,6 +239,12 @@ document.addEventListener("keyup", (e) => {
       prota.stop(e.key);
       keypressed = keypressed.filter((key) => key != e.key);
       break;
+    case " ":
+      prota.speed = 1.5;
+      prota.move(keypressed[0]);
+      boost--;
+      if (boost < 0) boost = 0;
+      else score -= 50;
   }
 });
 
