@@ -268,4 +268,4 @@ function generateEvilGumball() {
   evilGumball.push(eGumball);
 }
 
-setInterval(() => generateEvilGumball(), 1000);
+setInterval(() => generateEvilGumball(), 1400);
