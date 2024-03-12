@@ -1,4 +1,5 @@
 const canvas = document.getElementById("canvas");
+const scoreBoard = document.querySelector(".score");
 const ctx = canvas.getContext("2d");
 
 let canvasWidth = innerWidth;
@@ -14,8 +15,9 @@ const camera = {
 
 let keypressed = [];
 let count = 0;
+let score = 0;
 
-const protaColors = ["#d90947", "#cc5679", "#cf7c95", "#d6a5b4", "#e6dadd"];
+const protaColors = ["#d90947", "#cc5679", "#cf7c95", "#d6a5b4"];
 
 class GumBall {
   constructor(x, y, radius, color) {
@@ -142,20 +144,29 @@ function animate() {
   evilGumball.forEach((gumball, idx) => {
     gumball.render();
     gumball.updateEvil(prota.position.x, prota.position.y);
-    const distance = Math.hypot(
+    const centreDistance = Math.hypot(
       prota.position.x - gumball.position.x,
       prota.position.y - gumball.position.y
     );
-    if (Math.floor(distance) - prota.radius - gumball.radius < 1) {
+    const actualDistance =
+      Math.floor(centreDistance) - prota.radius - gumball.radius;
+    if (actualDistance < 1) {
       evilGumball = evilGumball.filter((_, i) => i != idx);
       count++;
       prota.color = protaColors[count];
+    } else if (actualDistance < 3 && actualDistance > 1) {
+      score += 5;
+    } else if (actualDistance < 10 && actualDistance > 3) {
+      score += 3;
+    } else if (actualDistance < 15) {
+      score += 1;
     }
-    if (count == 4) cancelAnimationFrame();
+    scoreBoard.innerText = score;
+    console.log(score);
+    if (count > 3) cancelAnimationFrame();
   });
   requestAnimationFrame(animate);
 }
-
 animate();
 
 document.addEventListener("keydown", (e) => {
@@ -203,4 +214,3 @@ function generateEvilGumball() {
 }
 
 setInterval(() => generateEvilGumball(), 1000);
-// generateEvilGumball();
